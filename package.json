@@ -1,0 +1,12 @@
+{
+  "name": "timebuck-bot",
+  "version": "1.0.0",
+  "description": "Automated bot for timebuck surveys",
+  "main": "check-login.js",
+  "dependencies": {
+    "playwright": "^1.40.0"
+  },
+  "scripts": {
+    "check-login": "node check-login.js"
+  }
+}
