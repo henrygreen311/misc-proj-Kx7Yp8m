@@ -40,7 +40,7 @@ if (await europaLeagueSection.isVisible()) {
     }
     
     // Save matches to file
-    fs.writeFileSync('europa_league_matches.txt', matchList.join('\n'), 'utf8');
+    fs.writeFileSync('today_fix_matches.txt', matchList.join('\n'), 'utf8');
     console.log('Saved matches to europa_league_matches.txt');
 } else {
     console.log('Europa League section not found');
