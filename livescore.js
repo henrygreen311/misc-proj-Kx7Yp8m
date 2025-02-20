@@ -18,20 +18,32 @@ const fs = require('fs');
         console.log('No cookie dialog found');
     }
 
-    // Wait for the page to load completely
+    // Wait for 30 seconds to allow full page load
     await page.waitForTimeout(30000);
 
-    // Extract all match divs
-    const matchDivs = await page.$$eval('div.Kq.Oq[id]', divs => 
-        divs.map(div => div.outerHTML) // Extract full HTML of the div
-    );
+    // Extract all match rows
+    const matches = await page.evaluate(() => {
+        const matchRows = document.querySelectorAll('div.Kq.Oq[id$="__match-row"]');
+        let matchData = [];
 
-    // Save extracted divs to a file
-    if (matchDivs.length > 0) {
-        fs.writeFileSync('today_fix_matches.txt', matchDivs.join('\n\n'));
-        console.log(`Saved ${matchDivs.length} matches to today_fix_matches.txt`);
+        matchRows.forEach(row => {
+            const homeTeam = row.querySelector('[id$="__match-row__home-team-name"]')?.innerText.trim();
+            const awayTeam = row.querySelector('[id$="__match-row__away-team-name"]')?.innerText.trim();
+
+            if (homeTeam && awayTeam) {
+                matchData.push(`${homeTeam} vs ${awayTeam}`);
+            }
+        });
+
+        return matchData;
+    });
+
+    // Save matches to file
+    if (matches.length > 0) {
+        fs.writeFileSync('today_fix_matches.txt', matches.join('\n'));
+        console.log('Matches saved to today_fix_matches.txt');
     } else {
-        console.log('No match divs found.');
+        console.log('No matches found');
     }
 
     await browser.close();
