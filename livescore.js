@@ -8,7 +8,16 @@ const { chromium } = require('playwright');
     // Go to LiveScore
     await page.goto('https://www.livescore.com/en/', { waitUntil: 'load' });
 
-    // Wait for 10 seconds to allow full page load
+    // Wait for cookie dialog and accept it if present
+    try {
+        await page.waitForSelector('button:has-text("Accept")', { timeout: 5000 });
+        await page.click('button:has-text("Accept")');
+        console.log('Accepted cookies');
+    } catch (error) {
+        console.log('No cookie dialog found');
+    }
+
+    // Wait for 30 seconds to allow full page load
     await page.waitForTimeout(30000);
 
     // Take screenshot
