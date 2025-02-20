@@ -20,28 +20,43 @@ const fs = require('fs');
         console.log('No cookie dialog found.');
     }
 
-    // Wait for 30 seconds to allow full page load
+    // Wait for full page load
     console.log('Waiting 30 seconds for full page load...');
     await page.waitForTimeout(30000);
     console.log('Page fully loaded.');
 
-    // Extract all match rows
-    console.log('Extracting match data...');
+    // Extract all match categories and their stages
+    console.log('Finding all competition stages...');
     const matches = await page.evaluate(() => {
-        const matchRows = document.querySelectorAll('div.Kq.Oq[id$="__match-row"]');
         let matchData = [];
+        const competitionSections = document.querySelectorAll('div.rf[id^="category-header__stage"]');
 
-        console.log(`Found ${matchRows.length} match rows.`);
+        console.log(`Found ${competitionSections.length} competition sections.`);
 
-        matchRows.forEach(row => {
-            const homeTeam = row.querySelector('[id$="__match-row__home-team-name"]')?.innerText.trim();
-            const awayTeam = row.querySelector('[id$="__match-row__away-team-name"]')?.innerText.trim();
+        competitionSections.forEach(section => {
+            const stage = section.innerText.trim();
+            const categoryDiv = section.nextElementSibling; // Assuming the next div contains the category
 
-            if (homeTeam && awayTeam) {
-                console.log(`Match found: ${homeTeam} vs ${awayTeam}`);
-                matchData.push(`${homeTeam} vs ${awayTeam}`);
-            } else {
-                console.log('Match row found but missing team names.');
+            if (categoryDiv && categoryDiv.classList.contains('tf')) {
+                const category = categoryDiv.innerText.trim();
+                console.log(`Processing: ${category} - ${stage}`);
+
+                // Find match rows inside this competition section
+                const matchRows = section.parentElement.querySelectorAll('div.Kq.Oq[id$="__match-row"]');
+                console.log(`Found ${matchRows.length} matches in ${category} - ${stage}`);
+
+                matchRows.forEach(row => {
+                    const homeTeam = row.querySelector('[id$="__match-row__home-team-name"]')?.innerText.trim();
+                    const awayTeam = row.querySelector('[id$="__match-row__away-team-name"]')?.innerText.trim();
+
+                    if (homeTeam && awayTeam) {
+                        const matchString = `${category} - ${stage}: ${homeTeam} vs ${awayTeam}`;
+                        console.log(`Match found: ${matchString}`);
+                        matchData.push(matchString);
+                    } else {
+                        console.log('Match row found but missing team names.');
+                    }
+                });
             }
         });
 
