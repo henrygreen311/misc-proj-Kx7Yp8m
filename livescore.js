@@ -17,20 +17,18 @@ try {
 // Wait for 30 seconds to allow full page load
 await page.waitForTimeout(30000);
 
-// Extract all unique category names
-const categoryElements = await page.$$('#category-header__category');
-const categories = new Set();
+// Extract all unique category names using evaluate
+const categories = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('#category-header__category'))
+        .map(el => el.textContent.trim())
+        .filter((value, index, self) => self.indexOf(value) === index); // Remove duplicates
+});
 
-for (const element of categoryElements) {
-    const text = await element.textContent();
-    if (text && !categories.has(text.trim())) {
-        categories.add(text.trim());
-        console.log(`Found category: ${text.trim()}`);
-    }
-}
+// Log each category
+categories.forEach(category => console.log(`Found category: ${category}`));
 
 // Write unique categories to matches.txt
-fs.writeFileSync('matches.txt', Array.from(categories).join('\n'), 'utf-8');
+fs.writeFileSync('matches.txt', categories.join('\n'), 'utf-8');
 console.log('Data saved to matches.txt');
 
 await browser.close();
