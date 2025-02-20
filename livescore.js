@@ -18,20 +18,21 @@ const fs = require('fs');
         console.log('No cookie dialog found');
     }
 
-    // Wait for 30 seconds to allow full page load
+    // Wait for the page to load completely
     await page.waitForTimeout(30000);
 
-    // Find all match-row divs
-    const matchRows = await page.$$eval('div.Kq.Oq[id]', elements => 
-        elements.map(el => el.outerHTML)
+    // Extract all match divs
+    const matchDivs = await page.$$eval('div.Kq.Oq[id]', divs => 
+        divs.map(div => div.outerHTML) // Extract full HTML of the div
     );
 
-    // Count matches found
-    console.log(`Total matches found: ${matchRows.length}`);
-
-    // Save match data to a file
-    fs.writeFileSync('today_fix_matches.txt', matchRows.join('\n'), 'utf-8');
-    console.log('Match data saved to today_fix_matches.txt');
+    // Save extracted divs to a file
+    if (matchDivs.length > 0) {
+        fs.writeFileSync('today_fix_matches.txt', matchDivs.join('\n\n'));
+        console.log(`Saved ${matchDivs.length} matches to today_fix_matches.txt`);
+    } else {
+        console.log('No match divs found.');
+    }
 
     await browser.close();
 })();
