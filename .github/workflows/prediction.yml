@@ -29,3 +29,9 @@ jobs:
         run: npm run flashscore  # Make sure your script is named appropriately
         env:
           DISPLAY: ':99.0'  # Enable Xvfb to run headless
+
+      - name: Upload matches.txt
+        uses: actions/upload-artifact@v4
+        with:
+          name: extracted-matches
+          path: matches.txt
