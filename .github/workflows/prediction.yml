@@ -20,15 +20,18 @@ jobs:
           node-version: '14'
 
       - name: Install dependencies
-        run: |
-          npm install
+        run: npm install
 
       - name: Install Playwright browsers
-        run: |
-          npx playwright install
+        run: npx playwright install
 
       - name: Run automation script
-        run: |
-          npm run livescore # Make sure your script is named appropriately
+        run: node livescore.js
         env:
           DISPLAY: ':99.0'  # Enable Xvfb to run headless
+
+      - name: Upload match data
+        uses: actions/upload-artifact@v4
+        with:
+          name: today-fix-matches
+          path: today_fix_matches.txt  # Upload the generated file
