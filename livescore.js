@@ -2,7 +2,7 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 
 (async () => {
-    const browser = await chromium.launch({ headless: true });
+    const browser = await chromium.launch({ headless: false }); // Set to false to see browser actions
     const context = await browser.newContext();
     const page = await context.newPage();
 
@@ -23,47 +23,53 @@ const fs = require('fs');
     console.log('Waiting 30 seconds for page to load...');
     await page.waitForTimeout(30000);
 
-    console.log('Extracting competitions and matches...');
-    const matches = await page.evaluate(() => {
-        let allMatches = [];
-        const competitions = document.querySelectorAll('div[id="category-header__category"]');
+    console.log('Finding competition headers...');
+    const categories = await page.$$eval('div[id="category-header__category"]', elements => 
+        elements.map(el => el.textContent.trim())
+    );
 
-        console.log(`Found ${competitions.length} competitions.`);
-        competitions.forEach(category => {
-            const competitionName = category.innerText.trim();
-            console.log(`Processing competition: ${competitionName}`);
+    if (categories.length === 0) {
+        console.log('â No competitions found. Exiting...');
+        await browser.close();
+        return;
+    }
 
-            // Move to the parent element to search for its match rows
-            const parentContainer = category.closest('div'); 
-            const matchRows = parentContainer.querySelectorAll('div.Kq.Oq[id$="__match-row"]');
+    console.log(`â Found ${categories.length} competitions:`);
+    categories.forEach((category, index) => console.log(`  ${index + 1}. ${category}`));
 
-            console.log(`Found ${matchRows.length} matches in ${competitionName}`);
+    console.log('\nNow extracting matches...\n');
+    
+    let matches = [];
 
-            matchRows.forEach(row => {
-                const homeTeam = row.querySelector('[id$="__match-row__home-team-name"]')?.innerText.trim();
-                const awayTeam = row.querySelector('[id$="__match-row__away-team-name"]')?.innerText.trim();
+    for (const category of categories) {
+        console.log(`â¡ Processing matches for competition: ${category}`);
 
-                if (homeTeam && awayTeam) {
-                    const matchInfo = `${homeTeam} vs ${awayTeam}`;
-                    console.log(`Match found: ${matchInfo}`);
-                    allMatches.push(matchInfo);
-                } else {
-                    console.log('Match row found but missing team names.');
-                }
-            });
-        });
+        const matchRows = await page.$$('[id$="__match-row"]'); // Select all match rows
 
-        return allMatches;
-    });
+        console.log(`  ð Found ${matchRows.length} match rows under ${category}`);
 
-    // Save matches to file
+        for (const row of matchRows) {
+            try {
+                const homeTeam = await row.$eval('[id$="__match-row__home-team-name"]', el => el.textContent.trim());
+                const awayTeam = await row.$eval('[id$="__match-row__away-team-name"]', el => el.textContent.trim());
+                
+                const matchInfo = `${homeTeam} vs ${awayTeam}`;
+                console.log(`  â Match Found: ${matchInfo}`);
+                
+                matches.push(matchInfo);
+            } catch (error) {
+                console.log('  â  Skipping an incomplete match entry');
+            }
+        }
+    }
+
+    // Save matches to a file
     if (matches.length > 0) {
         fs.writeFileSync('matches.txt', matches.join('\n'), 'utf-8');
-        console.log(`Matches saved to matches.txt. Total matches: ${matches.length}`);
+        console.log(`â Matches saved successfully. Total matches: ${matches.length}`);
     } else {
-        console.log('No matches found.');
+        console.log('â No matches found.');
     }
 
     await browser.close();
-    console.log('Browser closed.');
-})();
+    console.log('Browser 
