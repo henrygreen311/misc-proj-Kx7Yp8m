@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const fs = require('fs');
 
 (async () => {
     const browser = await chromium.launch({ headless: true });
@@ -20,25 +21,17 @@ const { chromium } = require('playwright');
     // Wait for 30 seconds to allow full page load
     await page.waitForTimeout(30000);
 
-    // Take initial screenshot (dashboard view)
-    await page.screenshot({ path: 'dashboard_top.png' });
-    console.log('Screenshot saved as dashboard_top.png');
+    // Find all match-row divs
+    const matchRows = await page.$$eval('div.Kq.Oq[id]', elements => 
+        elements.map(el => el.outerHTML)
+    );
 
-    // Scroll to the middle of the page
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
-    await page.waitForTimeout(30000); // Small delay to ensure smooth scrolling
+    // Count matches found
+    console.log(`Total matches found: ${matchRows.length}`);
 
-    // Take middle screenshot
-    await page.screenshot({ path: 'dashboard_middle.png' });
-    console.log('Screenshot saved as dashboard_middle.png');
-
-    // Scroll to the footer
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(30000); // Small delay to ensure smooth scrolling
-
-    // Take footer screenshot
-    await page.screenshot({ path: 'dashboard_footer.png' });
-    console.log('Screenshot saved as dashboard_footer.png');
+    // Save match data to a file
+    fs.writeFileSync('today_fix_matches.txt', matchRows.join('\n'), 'utf-8');
+    console.log('Match data saved to today_fix_matches.txt');
 
     await browser.close();
 })();
