@@ -25,42 +25,43 @@ const fs = require('fs');
     await page.waitForTimeout(30000);
     console.log('Page fully loaded.');
 
-    // Extract all match categories and their stages
-    console.log('Finding all competition stages...');
+    // Extract matches grouped by category-header__stage
+    console.log('Extracting matches by competition...');
     const matches = await page.evaluate(() => {
-        let matchData = [];
-        const competitionSections = document.querySelectorAll('div.rf[id^="category-header__stage"]');
+        let allMatches = [];
 
-        console.log(`Found ${competitionSections.length} competition sections.`);
+        // Find all sections with category-header__stage and category-header__category
+        const sections = document.querySelectorAll('div[id="category-header__stage"]');
+        console.log(`Found ${sections.length} competition sections.`);
 
-        competitionSections.forEach(section => {
-            const stage = section.innerText.trim();
-            const categoryDiv = section.nextElementSibling; // Assuming the next div contains the category
+        sections.forEach(section => {
+            const stage = section.innerText.trim();  // Knockout Round Play-offs, etc.
+            const categoryDiv = section.nextElementSibling; // Get the next sibling containing category name
+            const category = categoryDiv && categoryDiv.id === "category-header__category"
+                ? categoryDiv.innerText.trim()
+                : "Unknown Category";
 
-            if (categoryDiv && categoryDiv.classList.contains('tf')) {
-                const category = categoryDiv.innerText.trim();
-                console.log(`Processing: ${category} - ${stage}`);
+            console.log(`Processing section: ${category} - ${stage}`);
 
-                // Find match rows inside this competition section
-                const matchRows = section.parentElement.querySelectorAll('div.Kq.Oq[id$="__match-row"]');
-                console.log(`Found ${matchRows.length} matches in ${category} - ${stage}`);
+            // Find all match rows inside this section
+            const matchRows = section.parentElement.querySelectorAll('div.Kq.Oq[id$="__match-row"]');
+            console.log(`Found ${matchRows.length} match rows under ${category} - ${stage}`);
 
-                matchRows.forEach(row => {
-                    const homeTeam = row.querySelector('[id$="__match-row__home-team-name"]')?.innerText.trim();
-                    const awayTeam = row.querySelector('[id$="__match-row__away-team-name"]')?.innerText.trim();
+            matchRows.forEach(row => {
+                const homeTeam = row.querySelector('[id$="__match-row__home-team-name"]')?.innerText.trim();
+                const awayTeam = row.querySelector('[id$="__match-row__away-team-name"]')?.innerText.trim();
 
-                    if (homeTeam && awayTeam) {
-                        const matchString = `${category} - ${stage}: ${homeTeam} vs ${awayTeam}`;
-                        console.log(`Match found: ${matchString}`);
-                        matchData.push(matchString);
-                    } else {
-                        console.log('Match row found but missing team names.');
-                    }
-                });
-            }
+                if (homeTeam && awayTeam) {
+                    const matchInfo = `${homeTeam} vs ${awayTeam}`;
+                    console.log(`Match found: ${matchInfo}`);
+                    allMatches.push(matchInfo);
+                } else {
+                    console.log('Match row found but missing team names.');
+                }
+            });
         });
 
-        return matchData;
+        return allMatches;
     });
 
     // Save matches to file
