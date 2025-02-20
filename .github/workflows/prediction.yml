@@ -1,37 +1,23 @@
-name: Run Predict-bot Script
+const { chromium } = require('playwright');
 
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+(async () => { const browser = await chromium.launch({ headless: true }); const context = await browser.newContext(); const page = await context.newPage();
 
-jobs:
-  automate:
-    runs-on: ubuntu-latest
+// Go to FlashScore
+await page.goto('https://www.flashscore.com/', { waitUntil: 'load' });
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+// Wait for cookie dialog and accept it if present
+try {
+    await page.waitForSelector('button:has-text("Accept")', { timeout: 5000 });
+    await page.click('button:has-text("Accept")');
+    console.log('Accepted cookies');
+} catch (error) {
+    console.log('No cookie dialog found');
+}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '14'
+// Wait for full page load
+await page.waitForTimeout(5000);
 
-      - name: Install dependencies
-        run: npm install
+await browser.close();
 
-      - name: Install Playwright browsers
-        run: npx playwright install
+})();
 
-      - name: Run automation script
-        run: node flashscore.js
-        env:
-          DISPLAY: ':99.0'  # Enable Xvfb to run headless
-
-      - name: Upload match data
-        uses: actions/upload-artifact@v4
-        with:
-          name: today-fix-matches
-          path: matches.txt  # Upload the generated file
