@@ -1,12 +1,12 @@
 {
-  "name": "timebuck-bot",
+  "name": "Prediction-bot",
   "version": "1.0.0",
-  "description": "Automated bot for timebuck surveys",
-  "main": "check-login.js",
+  "description": "Automated bot for football Prediction-bot",
+  "main": "livescore.js",
   "dependencies": {
     "playwright": "^1.40.0"
   },
   "scripts": {
-    "check-login": "node check-login.js"
+    "check-login": "node livescore.js"
   }
 }
