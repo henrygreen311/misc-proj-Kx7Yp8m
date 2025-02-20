@@ -2,11 +2,11 @@
   "name": "Prediction-bot",
   "version": "1.0.0",
   "description": "Automated bot for football Prediction-bot",
-  "main": "livescore.js",
+  "main": "flashscore.js",
   "dependencies": {
     "playwright": "^1.40.0"
   },
   "scripts": {
-    "livescore": "node livescore.js"
+    "flashscore": "node flashscore.js"
   }
 }
