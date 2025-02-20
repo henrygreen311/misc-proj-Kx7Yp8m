@@ -30,20 +30,14 @@ jobs:
         env:
           DISPLAY: ':99.0'  # Enable Xvfb to run headless
 
-      - name: Upload Dashboard Screenshot
-        uses: actions/upload-artifact@v4
-        with:
-          name: screenshot-dashboard
-          path: ./screenshot_dashboard.png
+      - name: Create Screenshots Directory
+        run: mkdir -p screenshots
 
-      - name: Upload Middle Screenshot
-        uses: actions/upload-artifact@v4
-        with:
-          name: screenshot-middle
-          path: ./screenshot_middle.png
+      - name: Move Screenshots to Directory
+        run: mv ./screenshot_dashboard.png ./screenshot_middle.png ./screenshot_footer.png screenshots/
 
-      - name: Upload Footer Screenshot
+      - name: Upload All Screenshots
         uses: actions/upload-artifact@v4
         with:
-          name: screenshot-footer
-          path: ./screenshot_footer.png
+          name: all-screenshots
+          path: screenshots/
