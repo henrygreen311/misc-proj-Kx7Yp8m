@@ -33,8 +33,11 @@ jobs:
         env:
           DISPLAY: ':99.0'  # Enable Xvfb to run headless
 
-      - name: Upload screenshot
+      - name: Upload all screenshots
         uses: actions/upload-artifact@v4
         with:
-          name: dashboard-screenshot
-          path: dashboard.png  # Path to the screenshot you want to upload
+          name: dashboard-screenshots
+          path: |
+            dashboard_top.png
+            dashboard_middle.png
+            dashboard_footer.png
