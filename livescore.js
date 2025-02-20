@@ -9,7 +9,7 @@ const { chromium } = require('playwright');
     await page.goto('https://www.livescore.com/en/', { waitUntil: 'load' });
 
     // Wait for 10 seconds to allow full page load
-    await page.waitForTimeout(10000);
+    await page.waitForTimeout(30000);
 
     // Take screenshot
     await page.screenshot({ path: 'dashboard.png', fullPage: true });
