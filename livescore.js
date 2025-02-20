@@ -18,7 +18,7 @@ const { chromium } = require('playwright');
     }
 
     // Wait for 30 seconds to allow full page load
-    await page.waitForTimeout(180000);
+    await page.waitForTimeout(30000);
 
     // Take screenshot
     await page.screenshot({ path: 'dashboard.png', fullPage: true });
