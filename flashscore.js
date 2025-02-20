@@ -20,5 +20,20 @@ const { chromium } = require('playwright');
     // Wait for full page load
     await page.waitForTimeout(5000);
 
+    // Find all divs with the target class
+    const matchDivs = await page.$$(`div.event__match.event__match--withRowLink.event__match--twoLine`);
+
+    let uniqueIds = new Set();
+    
+    for (const div of matchDivs) {
+        const id = await div.getAttribute('id');
+        if (id && !uniqueIds.has(id)) {
+            uniqueIds.add(id);
+            console.log(`Found match div with ID: ${id}`);
+        }
+    }
+
+    console.log(`Total unique match divs found: ${uniqueIds.size}`);
+
     await browser.close();
 })();
