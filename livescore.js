@@ -1,5 +1,4 @@
 const { chromium } = require('playwright');
-const fs = require('fs');
 
 (async () => {
     const browser = await chromium.launch({ headless: true });
@@ -18,34 +17,37 @@ const fs = require('fs');
         console.log('No cookie dialog found');
     }
 
-    // Wait for the page to load
+    // Wait for the page to fully load
     await page.waitForTimeout(5000);
 
-    // Find all competition headers
-    const categories = await page.$$eval('[id="category-header__category"]', elements => 
-        elements.map(el => el.textContent.trim())
-    );
+    // Find all sections that contain matches
+    const categories = await page.$$('[id="category-header__category"]');
 
     let matches = [];
 
-    // Iterate over each category and find matches
+    // Loop through each category section
     for (const category of categories) {
-        const matchRows = await page.$$('[id$="__match-row"]'); // Select all match rows dynamically
+        // Get the parent element of the category
+        const parentSection = await category.evaluateHandle(el => el.closest('section'));
 
-        for (const row of matchRows) {
-            try {
-                const homeTeam = await row.$eval('[id$="__match-row__home-team-name"]', el => el.textContent.trim());
-                const awayTeam = await row.$eval('[id$="__match-row__away-team-name"]', el => el.textContent.trim());
-                matches.push(`${homeTeam} vs ${awayTeam}`);
-            } catch (error) {
-                console.log('Skipping an incomplete match entry');
+        if (parentSection) {
+            // Find all match rows within this section
+            const matchRows = await parentSection.$$('[id$="__match-row"]');
+
+            for (const row of matchRows) {
+                try {
+                    const homeTeam = await row.$eval('[id$="__match-row__home-team-name"]', el => el.textContent.trim());
+                    const awayTeam = await row.$eval('[id$="__match-row__away-team-name"]', el => el.textContent.trim());
+                    matches.push(`${homeTeam} vs ${awayTeam}`);
+                } catch (error) {
+                    console.log('Skipping an incomplete match entry');
+                }
             }
         }
     }
 
-    // Save matches to a file
-    fs.writeFileSync('matches.txt', matches.join('\n'), 'utf-8');
-    console.log('Matches saved successfully');
+    // Display extracted matches
+    console.log('Extracted Matches:', matches);
 
     await browser.close();
 })();
