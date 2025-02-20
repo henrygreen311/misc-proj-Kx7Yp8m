@@ -26,7 +26,7 @@ jobs:
         run: npx playwright install
 
       - name: Run automation script
-        run: node livescore.js
+        run: node flashscore.js
         env:
           DISPLAY: ':99.0'  # Enable Xvfb to run headless
 
