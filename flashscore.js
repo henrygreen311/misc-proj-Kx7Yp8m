@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const fs = require('fs');
 
 (async () => { 
     const browser = await chromium.launch({ headless: true }); 
@@ -22,18 +23,31 @@ const { chromium } = require('playwright');
 
     // Find all divs with the target class
     const matchDivs = await page.$$(`div.event__match.event__match--withRowLink.event__match--twoLine`);
+    let uniqueMatches = new Set();
 
-    let uniqueIds = new Set();
-    
     for (const div of matchDivs) {
         const id = await div.getAttribute('id');
-        if (id && !uniqueIds.has(id)) {
-            uniqueIds.add(id);
-            console.log(`Found match div with ID: ${id}`);
+
+        if (id && !uniqueMatches.has(id)) {
+            uniqueMatches.add(id);
+
+            // Find all team names (should be two per div)
+            const teamSpans = await div.$$(`span.wcl-simpleText_Asp-0.wcl-scores-simpleText-01_pV2Wk.wcl-name_3y6f5`);
+            
+            if (teamSpans.length === 2) {
+                const team1 = await teamSpans[0].textContent();
+                const team2 = await teamSpans[1].textContent();
+                
+                const matchString = `${team1} vs ${team2}`;
+                console.log(`Match found: ${matchString}`);
+
+                // Save match to file
+                fs.appendFileSync('matches.txt', matchString + '\n');
+            }
         }
     }
 
-    console.log(`Total unique match divs found: ${uniqueIds.size}`);
+    console.log(`Total unique matches found: ${uniqueMatches.size}`);
 
     await browser.close();
 })();
