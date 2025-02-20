@@ -28,17 +28,17 @@ steps:
     uses: actions/upload-artifact@v4
     with:
       name: screenshot-dashboard
-      path: screenshot_dashboard.png
+      path: ./screenshot_dashboard.png
 
   - name: Upload Middle Screenshot
     uses: actions/upload-artifact@v4
     with:
       name: screenshot-middle
-      path: screenshot_middle.png
+      path: ./screenshot_middle.png
 
   - name: Upload Footer Screenshot
     uses: actions/upload-artifact@v4
     with:
       name: screenshot-footer
-      path: screenshot_footer.png
+      path: ./screenshot_footer.png
 
