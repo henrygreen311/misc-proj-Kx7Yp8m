@@ -85,7 +85,7 @@ const fs = require('fs');
         if (spanElements.length > 0) {
             for (const span of spanElements) {
                 const text = await span.textContent();
-                console.log(`Found text: ${text}`);
+                console.log(`Found section: ${text}`);
                 matchData += `${text}\n`;  // Save only the text
             }
         } else {
@@ -97,11 +97,23 @@ const fs = require('fs');
         console.log(`Total h2h__row divs found in section ${i + 1}: ${h2hRows.length}`);
 
         for (let j = 0; j < h2hRows.length; j++) {
-            console.log(`  - h2h__row ${j + 1} found.`);
+            const h2hRow = h2hRows[j];
+
+            // Find all spans with class containing "h2h__participantInner"
+            const teamSpans = await h2hRow.$$(`span[class*="h2h__participantInner"]`);
+
+            if (teamSpans.length === 2) {
+                const team1 = await teamSpans[0].textContent();
+                const team2 = await teamSpans[1].textContent();
+
+                const matchLine = `${team1} vs ${team2} =`;
+                console.log(`  - Found match: ${matchLine}`);
+                matchData += `${matchLine}\n`;
+            }
         }
     }
 
-    // Save extracted match details (not h2h__row) to matches.txt
+    // Save extracted match details to matches.txt
     fs.writeFileSync('matches.txt', matchData.trim());  // Trim to remove extra newlines
     console.log("Match data saved to matches.txt");
 
