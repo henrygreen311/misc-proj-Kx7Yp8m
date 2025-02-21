@@ -95,12 +95,17 @@ const fs = require('fs');
 
                 const matchLine = `${team1} vs ${team2} =`;
 
-                // Store matches under each team
+                // Store only 4-5 matches per team to keep it clean
                 if (!matches[team1]) matches[team1] = [];
                 if (!matches[team2]) matches[team2] = [];
 
-                matches[team1].push(matchLine);
-                matches[team2].push(matchLine);
+                if (!matches[team1].includes(matchLine) && matches[team1].length < 5) {
+                    matches[team1].push(matchLine);
+                }
+
+                if (!matches[team2].includes(matchLine) && matches[team2].length < 5) {
+                    matches[team2].push(matchLine);
+                }
 
                 console.log(`  - Found match: ${matchLine}`);
             }
