@@ -78,15 +78,14 @@ const fs = require('fs');
     // Process only the first 3 sections
     for (let i = 0; i < Math.min(3, h2hSections.length); i++) {
         console.log(`Checking H2H section ${i + 1}...`);
-        
-        // Find all span elements that match the required pattern
-        const spanElements = await h2hSections[i].$$('span.wcl-overline_rOFfd.wcl-scores-overline-02_n9EXm[data-testid="wcl-scores-overline-02"]');
 
+        // Find section headers
+        const spanElements = await h2hSections[i].$$('span.wcl-overline_rOFfd.wcl-scores-overline-02_n9EXm[data-testid="wcl-scores-overline-02"]');
         if (spanElements.length > 0) {
             for (const span of spanElements) {
                 const text = await span.textContent();
                 console.log(`Found section: ${text}`);
-                matchData += `\n${text}\n`;  // Ensure section headers are properly formatted
+                matchData += `\n${text}\n`;
             }
         } else {
             console.log(`No matching spans found.`);
@@ -99,22 +98,40 @@ const fs = require('fs');
         for (let j = 0; j < h2hRows.length; j++) {
             const h2hRow = h2hRows[j];
 
-            // Find all spans with class containing "h2h__participantInner"
+            // Find team names
             const teamSpans = await h2hRow.$$(`span[class*="h2h__participantInner"]`);
-
-            if (teamSpans.length === 2) {
-                const team1 = await teamSpans[0].textContent();
-                const team2 = await teamSpans[1].textContent();
-
-                const matchLine = `${team1} vs ${team2} =`;
-                console.log(`  - Found match: ${matchLine}`);
-                matchData += `  - ${matchLine}\n`;  // Add the required indentation
+            if (teamSpans.length !== 2) {
+                console.log(`Skipping match row ${j + 1}: Team names not found.`);
+                continue;
             }
+            const team1 = (await teamSpans[0].textContent()).trim();
+            const team2 = (await teamSpans[1].textContent()).trim();
+
+            // Find match result inside <span class="h2h__result">
+            const resultSpan = await h2hRow.$(`span.h2h__result`);
+            if (!resultSpan) {
+                console.log(`Skipping match row ${j + 1}: No result span found.`);
+                continue;
+            }
+
+            // Get the two score spans inside <span class="h2h__result">
+            const scoreSpans = await resultSpan.$$(`span`);
+            if (scoreSpans.length !== 2) {
+                console.log(`Skipping match row ${j + 1}: Score format incorrect.`);
+                continue;
+            }
+
+            const score1 = (await scoreSpans[0].textContent()).trim();
+            const score2 = (await scoreSpans[1].textContent()).trim();
+
+            const matchLine = `  - ${team1} vs ${team2} = ${score1} - ${score2}`;
+            console.log(matchLine);
+            matchData += `${matchLine}\n`;
         }
     }
 
     // Save extracted match details to matches.txt
-    fs.writeFileSync('matches.txt', matchData.trim());  // Trim to remove extra newlines
+    fs.writeFileSync('matches.txt', matchData.trim()); 
     console.log("Match data saved to matches.txt");
 
     await browser.close();
