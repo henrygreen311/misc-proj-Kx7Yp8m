@@ -31,6 +31,15 @@ const fs = require('fs');
         if (id && !uniqueMatches.has(id)) {
             uniqueMatches.add(id);
 
+            // Check if the match is ongoing or finished
+            const scoreDiv = await div.$(`div.event__score.event__score--home`);
+            const scoreText = scoreDiv ? await scoreDiv.textContent() : '-';
+
+            if (scoreText.trim() !== '-') {
+                console.log(`Skipping match ${id}, it is already played or live.`);
+                continue; // Skip live and finished matches
+            }
+
             // Find all team names (should be two per div)
             const teamSpans = await div.$$(`span.wcl-simpleText_Asp-0.wcl-scores-simpleText-01_pV2Wk.wcl-name_3y6f5`);
             
@@ -39,7 +48,7 @@ const fs = require('fs');
                 const team2 = await teamSpans[1].textContent();
                 
                 const matchString = `${team1} vs ${team2}`;
-                console.log(`Match found: ${matchString}`);
+                console.log(`Upcoming match found: ${matchString}`);
 
                 // Save match to file
                 fs.appendFileSync('matches.txt', matchString + '\n');
@@ -47,7 +56,7 @@ const fs = require('fs');
         }
     }
 
-    console.log(`Total unique matches found: ${uniqueMatches.size}`);
+    console.log(`Total unique upcoming matches found: ${uniqueMatches.size}`);
 
     await browser.close();
 })();
