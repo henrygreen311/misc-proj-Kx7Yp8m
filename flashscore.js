@@ -2,7 +2,7 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 
 (async () => { 
-    const browser = await chromium.launch({ headless: true }); 
+    const browser = await chromium.launch({ headless: false });  // Set to false for debugging
     const context = await browser.newContext(); 
     const page = await context.newPage();
 
@@ -23,40 +23,40 @@ const fs = require('fs');
 
     // Find all divs with the target class
     const matchDivs = await page.$$(`div.event__match.event__match--withRowLink.event__match--twoLine`);
-    let uniqueMatches = new Set();
 
-    for (const div of matchDivs) {
-        const id = await div.getAttribute('id');
+    let uniqueIds = new Set();
+    let newPageOpened = false;
+    let newPage = null;
 
-        if (id && !uniqueMatches.has(id)) {
-            uniqueMatches.add(id);
+    // Listen for new pages opening
+    context.on('page', async (newTab) => {
+        console.log('A new tab opened.');
+        newPage = newTab;
+        newPageOpened = true;
+        await newPage.waitForLoadState();
+    });
 
-            // Check if the match is ongoing or finished
-            const scoreDiv = await div.$(`div.event__score.event__score--home`);
-            const scoreText = scoreDiv ? await scoreDiv.textContent() : '-';
+    if (matchDivs.length > 0) {
+        const firstMatch = matchDivs[0];
+        const id = await firstMatch.getAttribute('id');
 
-            if (scoreText.trim() !== '-') {
-                console.log(`Skipping match ${id}, it is already played or live.`);
-                continue; // Skip live and finished matches
-            }
-
-            // Find all team names (should be two per div)
-            const teamSpans = await div.$$(`span.wcl-simpleText_Asp-0.wcl-scores-simpleText-01_pV2Wk.wcl-name_3y6f5`);
-            
-            if (teamSpans.length === 2) {
-                const team1 = await teamSpans[0].textContent();
-                const team2 = await teamSpans[1].textContent();
-                
-                const matchString = `${team1} vs ${team2}`;
-                console.log(`Upcoming match found: ${matchString}`);
-
-                // Save match to file
-                fs.appendFileSync('matches.txt', matchString + '\n');
-            }
+        if (id) {
+            console.log(`Clicking on match div with ID: ${id}`);
+            await firstMatch.click({ button: 'middle' }); // Open in new tab if possible
+            await page.waitForTimeout(3000);  // Allow time for tab detection
         }
     }
 
-    console.log(`Total unique upcoming matches found: ${uniqueMatches.size}`);
+    // Handle new tab or same tab
+    const activePage = newPageOpened ? newPage : page;
+
+    if (activePage) {
+        console.log('Taking a screenshot of the opened match page...');
+        await activePage.screenshot({ path: 'match_screenshot.png' });
+        console.log('Screenshot saved as match_screenshot.png');
+    }
+
+    console.log(`Total unique match divs found: ${uniqueIds.size}`);
 
     await browser.close();
 })();
