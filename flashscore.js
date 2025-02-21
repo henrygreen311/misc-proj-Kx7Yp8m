@@ -1,7 +1,7 @@
 const { chromium } = require('playwright');
 
 (async () => { 
-    const browser = await chromium.launch({ headless: false }); // Set to true for GitHub Actions
+    const browser = await chromium.launch({ headless: true }); // Set to true for GitHub Actions
     const context = await browser.newContext(); 
     const page = await context.newPage();
 
