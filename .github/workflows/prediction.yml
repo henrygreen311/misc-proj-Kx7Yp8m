@@ -33,5 +33,5 @@ jobs:
       - name: Upload match screenshot
         uses: actions/upload-artifact@v4
         with:
-          name: match-screenshot
-          path: match_screenshot.png
+          name: match-data
+          path: matches.txt
