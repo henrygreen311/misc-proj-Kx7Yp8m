@@ -75,10 +75,11 @@ const fs = require('fs');
 
     let matchData = '';
 
-    for (let i = 0; i < h2hSections.length; i++) {
+    // Process only the first 3 sections
+    for (let i = 0; i < Math.min(3, h2hSections.length); i++) {
         console.log(`Checking H2H section ${i + 1}...`);
         
-        // Find all span elements inside this section that match the required pattern
+        // Find all span elements that match the required pattern
         const spanElements = await h2hSections[i].$$('span.wcl-overline_rOFfd.wcl-scores-overline-02_n9EXm[data-testid="wcl-scores-overline-02"]');
 
         if (spanElements.length > 0) {
@@ -90,9 +91,17 @@ const fs = require('fs');
         } else {
             console.log(`No matching spans found.`);
         }
+
+        // Look for <div class="h2h__row "> inside this section
+        const h2hRows = await h2hSections[i].$$('div.h2h__row[title="Click for match detail!"]');
+        console.log(`Total h2h__row divs found in section ${i + 1}: ${h2hRows.length}`);
+
+        for (let j = 0; j < h2hRows.length; j++) {
+            console.log(`  - h2h__row ${j + 1} found.`);
+        }
     }
 
-    // Save data to matches.txt
+    // Save extracted match details (not h2h__row) to matches.txt
     fs.writeFileSync('matches.txt', matchData.trim());  // Trim to remove extra newlines
     console.log("Match data saved to matches.txt");
 
