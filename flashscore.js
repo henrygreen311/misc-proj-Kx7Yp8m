@@ -1,73 +1,75 @@
 const { chromium } = require('playwright');
 
-(async () => { 
-    const browser = await chromium.launch({ headless: true }); // Set to true for GitHub Actions
-    const context = await browser.newContext(); 
+(async () => {
+    console.log("Launching browser...");
+    const browser = await chromium.launch({ headless: true });
+    const context = await browser.newContext();
     const page = await context.newPage();
 
-    console.log('Navigating to FlashScore...');
+    console.log("Navigating to FlashScore...");
     await page.goto('https://www.flashscore.com/', { waitUntil: 'load' });
 
     // Accept cookies if present
     try {
         await page.waitForSelector('button:has-text("Accept")', { timeout: 5000 });
         await page.click('button:has-text("Accept")');
-        console.log('Accepted cookies');
+        console.log("Accepted cookies");
     } catch (error) {
-        console.log('No cookie dialog found');
+        console.log("No cookie dialog found");
     }
 
-    // Wait for full page load
+    // Wait for page to load
     await page.waitForTimeout(5000);
 
-    // Find the first match div
-    const matchDiv = await page.$('div.event__match.event__match--withRowLink.event__match--twoLine');
+    // Find match elements
+    const matchDivs = await page.$$(`div.event__match.event__match--withRowLink.event__match--twoLine`);
+    console.log(`Total unique match divs found: ${matchDivs.length}`);
 
-    if (!matchDiv) {
+    if (matchDivs.length === 0) {
         console.log("No matches found. Exiting.");
         await browser.close();
         return;
     }
 
-    const id = await matchDiv.getAttribute('id');
-    console.log(`Opening first match with ID: ${id}`);
-    await matchDiv.click({ button: 'middle' }); // Open in a new tab
-    await page.waitForTimeout(3000);  
+    // Click on the first match
+    const firstMatch = matchDivs[0];
+    const id = await firstMatch.getAttribute('id');
 
-    // Handle new tab
-    let newPage = null;
-    context.on('page', async (tab) => {
-        newPage = tab;
-        console.log('New match tab opened.');
-        await newPage.waitForLoadState();
-    });
+    if (id) {
+        console.log(`Opening first match with ID: ${id}`);
+        await firstMatch.click({ button: 'middle' });
+        await page.waitForTimeout(3000); // Wait for tab to open
+    }
 
-    // Wait for tab to be detected
-    await page.waitForTimeout(5000); 
-    if (!newPage) {
-        console.log('Failed to detect new tab. Exiting.');
+    // Detect new tab
+    const newPages = context.pages();
+    const matchPage = newPages.length > 1 ? newPages[newPages.length - 1] : null;
+
+    if (!matchPage) {
+        console.log("Failed to detect new tab. Exiting.");
         await browser.close();
         return;
     }
 
-    // Wait for page load
-    await newPage.waitForTimeout(10000);
+    console.log("New match tab opened.");
+    await matchPage.waitForLoadState();
 
-    // Click on H2H tab
+    // Click on the H2H tab
     try {
-        await newPage.click('a.selected[href="#/h2h"] button.wcl-tabSelected_T--kd');
-        console.log('Clicked H2H tab.');
+        await matchPage.waitForSelector('a:has-text("H2H")', { timeout: 5000 });
+        await matchPage.click('a:has-text("H2H")');
+        console.log("Clicked H2H tab.");
     } catch (error) {
-        console.log('Failed to find or click H2H tab.');
+        console.log("H2H tab not found. Exiting.");
         await browser.close();
         return;
     }
 
-    // Wait for the H2H section to load
-    await newPage.waitForTimeout(5000);
+    // Wait for H2H section to load
+    await matchPage.waitForTimeout(3000);
 
-    // Count the number of H2H sections
-    const h2hSections = await newPage.$$('div.h2h__section.section');
+    // Count the number of h2h__section elements
+    const h2hSections = await matchPage.$$('div.h2h__section.section');
     console.log(`Total H2H sections found: ${h2hSections.length}`);
 
     await browser.close();
