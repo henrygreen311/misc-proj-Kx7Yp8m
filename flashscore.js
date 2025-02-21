@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const fs = require('fs');
 
 (async () => {
     console.log("Launching browser...");
@@ -72,6 +73,8 @@ const { chromium } = require('playwright');
     const h2hSections = await matchPage.$$('div.h2h__section.section');
     console.log(`Total H2H sections found: ${h2hSections.length}`);
 
+    let matchData = '';
+
     for (let i = 0; i < h2hSections.length; i++) {
         console.log(`Checking H2H section ${i + 1}...`);
         
@@ -82,11 +85,17 @@ const { chromium } = require('playwright');
             for (const span of spanElements) {
                 const text = await span.textContent();
                 console.log(`H2H Section ${i + 1} - Found text: ${text}`);
+                matchData += `H2H Section ${i + 1} - ${text}\n`;
             }
         } else {
             console.log(`H2H Section ${i + 1} - No matching spans found.`);
+            matchData += `H2H Section ${i + 1} - No matching spans found.\n`;
         }
     }
+
+    // Save data to matches.txt
+    fs.writeFileSync('matches.txt', matchData);
+    console.log("Match data saved to matches.txt");
 
     await browser.close();
 })();
