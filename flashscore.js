@@ -30,112 +30,103 @@ const fs = require('fs');
         return;
     }
 
-    // Create a new file to store match data
+    const firstMatch = matchDivs[0]; // Only process the first match
+    const id = await firstMatch.getAttribute('id');
+
+    if (!id) {
+        console.log("First match ID not found. Exiting.");
+        await browser.close();
+        return;
+    }
+
+    console.log(`Opening first match with ID: ${id}`);
+    const [newPage] = await Promise.all([
+        context.waitForEvent('page'), // Wait for a new tab to open
+        firstMatch.click({ button: 'middle' }) // Open match in a new tab
+    ]);
+
+    await newPage.waitForLoadState();
+    console.log('New match tab opened.');
+    await newPage.waitForTimeout(10000); // Wait for page to load
+
+    // Click the H2H tab
+    try {
+        await newPage.waitForSelector('a[href="#/h2h"] button', { timeout: 5000 });
+        await newPage.click('a[href="#/h2h"] button');
+        console.log('Clicked H2H tab.');
+        await newPage.waitForTimeout(5000);
+    } catch (error) {
+        console.log('H2H tab not found. Exiting.');
+        await browser.close();
+        return;
+    }
+
+    // Find H2H section
+    const sections = await newPage.$$('div.h2h__section.section');
+    if (sections.length < 3) {
+        console.log('Not enough H2H sections. Exiting.');
+        await browser.close();
+        return;
+    }
+
+    // Extract "Head-to-head matches" and "Last matches"
+    let headToHead = null;
+    let lastMatches = [];
+
+    for (const section of sections) {
+        const titleElement = await section.$('span[data-testid="wcl-scores-overline-02"]');
+        const titleText = titleElement ? await titleElement.innerText() : '';
+
+        if (titleText.includes('Head-to-head matches')) {
+            headToHead = section;
+        } else if (titleText.includes('Last matches')) {
+            lastMatches.push(section);
+        }
+    }
+
+    if (!headToHead || lastMatches.length !== 2) {
+        console.log('Required sections not found. Exiting.');
+        await browser.close();
+        return;
+    }
+
+    // Extract team names from "Last matches"
+    let teamNames = [];
+    for (const section of lastMatches) {
+        const titleElement = await section.$('span[data-testid="wcl-scores-overline-02"]');
+        const titleText = titleElement ? await titleElement.innerText() : '';
+        teamNames.push(titleText);
+    }
+
+    // Save extracted data
     const filePath = 'matches.txt';
     fs.writeFileSync(filePath, ""); // Reset file
 
-    for (let i = 0; i < matchDivs.length; i++) {
-        let newPageOpened = false;
-        let newPage = null;
-
-        // Listen for new tab
-        context.on('page', async (newTab) => {
-            console.log('A new tab opened.');
-            newPage = newTab;
-            newPageOpened = true;
-            await newPage.waitForLoadState();
-        });
-
-        // Click on match div to open it
-        const match = matchDivs[i];
-        const id = await match.getAttribute('id');
-        if (id) {
-            console.log(`Opening match ${i + 1} with ID: ${id}`);
-            await match.click({ button: 'middle' }); 
-            await page.waitForTimeout(3000);
-        }
-
-        const activePage = newPageOpened ? newPage : page;
-        if (activePage) {
-            console.log('Waiting 10 seconds for page to load...');
-            await activePage.waitForTimeout(10000);
-        }
-
-        // Click the H2H tab
-        try {
-            await activePage.waitForSelector('a[href="#/h2h"] button', { timeout: 5000 });
-            await activePage.click('a[href="#/h2h"] button');
-            console.log('Clicked H2H tab.');
-            await activePage.waitForTimeout(5000);
-        } catch (error) {
-            console.log('H2H tab not found. Skipping match.');
-            continue;
-        }
-
-        // Find H2H section
-        const sections = await activePage.$$('div.h2h__section.section');
-        if (sections.length < 3) {
-            console.log('Not enough H2H sections. Skipping match.');
-            continue;
-        }
-
-        // Validate and extract "Head-to-head matches" and "Last matches"
-        let headToHead = null;
-        let lastMatches = [];
-
-        for (const section of sections) {
-            const titleElement = await section.$('span[data-testid="wcl-scores-overline-02"]');
-            const titleText = titleElement ? await titleElement.innerText() : '';
-
-            if (titleText.includes('Head-to-head matches')) {
-                headToHead = section;
-            } else if (titleText.includes('Last matches')) {
-                lastMatches.push(section);
-            }
-        }
-
-        if (!headToHead || lastMatches.length !== 2) {
-            console.log('Required sections not found. Skipping match.');
-            continue;
-        }
-
-        // Extract team names from "Last matches"
-        let teamNames = [];
-        for (const section of lastMatches) {
-            const titleElement = await section.$('span[data-testid="wcl-scores-overline-02"]');
-            const titleText = titleElement ? await titleElement.innerText() : '';
-            teamNames.push(titleText);
-        }
-
-        // Save "Last matches" data
-        for (const team of teamNames) {
-            fs.appendFileSync(filePath, `\n${team}\n`);
-            console.log(`Extracted ${team}`);
-        }
-
-        // Extract and save H2H matches
-        fs.appendFileSync(filePath, '\nHead-to-head matches\n');
-
-        const h2hMatches = await headToHead.$$('div.h2h__row[title="Click for match detail!"]');
-        for (const match of h2hMatches) {
-            const teams = await match.$$('span.h2h__participantInner');
-            const results = await match.$$('span.h2h__result span');
-
-            if (teams.length === 2 && results.length === 2) {
-                const team1 = await teams[0].innerText();
-                const team2 = await teams[1].innerText();
-                const score1 = await results[0].innerText();
-                const score2 = await results[1].innerText();
-
-                const matchResult = `${team1} vs ${team2} = ${score1} - ${score2}`;
-                fs.appendFileSync(filePath, matchResult + '\n');
-                console.log(`Saved match result: ${matchResult}`);
-            }
-        }
-
-        console.log('Match processing complete.\n');
+    for (const team of teamNames) {
+        fs.appendFileSync(filePath, `\n${team}\n`);
+        console.log(`Extracted ${team}`);
     }
 
-    console.log('All matches processed.');
+    fs.appendFileSync(filePath, '\nHead-to-head matches\n');
+
+    // Extract and save H2H matches
+    const h2hMatches = await headToHead.$$('div.h2h__row[title="Click for match detail!"]');
+    for (const match of h2hMatches) {
+        const teams = await match.$$('span.h2h__participantInner');
+        const results = await match.$$('span.h2h__result span');
+
+        if (teams.length === 2 && results.length === 2) {
+            const team1 = await teams[0].innerText();
+            const team2 = await teams[1].innerText();
+            const score1 = await results[0].innerText();
+            const score2 = await results[1].innerText();
+
+            const matchResult = `${team1} vs ${team2} = ${score1} - ${score2}`;
+            fs.appendFileSync(filePath, matchResult + '\n');
+            console.log(`Saved match result: ${matchResult}`);
+        }
+    }
+
+    console.log('Match processing complete.');
     await browser.close();
 })();
