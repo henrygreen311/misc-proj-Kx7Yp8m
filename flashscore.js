@@ -24,7 +24,14 @@ const fs = require('fs');
     // Find all divs with the target class
     const matchDivs = await page.$$(`div.event__match.event__match--withRowLink.event__match--twoLine`);
 
-    let uniqueIds = new Set();
+    console.log(`Total unique match divs found: ${matchDivs.length}`);
+
+    if (matchDivs.length === 0) {
+        console.log("No matches found. Exiting.");
+        await browser.close();
+        return;
+    }
+
     let newPageOpened = false;
     let newPage = null;
 
@@ -36,27 +43,27 @@ const fs = require('fs');
         await newPage.waitForLoadState();
     });
 
-    if (matchDivs.length > 0) {
-        const firstMatch = matchDivs[0];
-        const id = await firstMatch.getAttribute('id');
+    // Click on the first match div only
+    const firstMatch = matchDivs[0];
+    const id = await firstMatch.getAttribute('id');
 
-        if (id) {
-            console.log(`Clicking on match div with ID: ${id}`);
-            await firstMatch.click({ button: 'middle' }); // Open in new tab if possible
-            await page.waitForTimeout(3000);  // Allow time for tab detection
-        }
+    if (id) {
+        console.log(`Clicking on first match div with ID: ${id}`);
+        await firstMatch.click({ button: 'middle' }); // Try opening in a new tab
+        await page.waitForTimeout(3000);  // Allow time for tab detection
     }
 
     // Handle new tab or same tab
     const activePage = newPageOpened ? newPage : page;
 
     if (activePage) {
+        console.log('Waiting 10 seconds before taking a screenshot...');
+        await activePage.waitForTimeout(10000); // Wait 10 seconds
+
         console.log('Taking a screenshot of the opened match page...');
         await activePage.screenshot({ path: 'match_screenshot.png' });
         console.log('Screenshot saved as match_screenshot.png');
     }
-
-    console.log(`Total unique match divs found: ${uniqueIds.size}`);
 
     await browser.close();
 })();
