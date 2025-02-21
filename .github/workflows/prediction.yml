@@ -30,8 +30,8 @@ jobs:
         env:
           DISPLAY: ':99.0'  # Enable Xvfb to run headless
 
-      - name: Upload matches.txt
+      - name: Upload match screenshot
         uses: actions/upload-artifact@v4
         with:
-          name: extracted-matches
-          path: matches.txt
+          name: match-screenshot
+          path: match_screenshot.png
