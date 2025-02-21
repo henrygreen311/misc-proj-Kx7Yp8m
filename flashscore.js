@@ -86,7 +86,7 @@ const fs = require('fs');
             for (const span of spanElements) {
                 const text = await span.textContent();
                 console.log(`Found section: ${text}`);
-                matchData += `${text}\n`;  // Save only the text
+                matchData += `\n${text}\n`;  // Ensure section headers are properly formatted
             }
         } else {
             console.log(`No matching spans found.`);
@@ -108,7 +108,7 @@ const fs = require('fs');
 
                 const matchLine = `${team1} vs ${team2} =`;
                 console.log(`  - Found match: ${matchLine}`);
-                matchData += `${matchLine}\n`;
+                matchData += `  - ${matchLine}\n`;  // Add the required indentation
             }
         }
     }
