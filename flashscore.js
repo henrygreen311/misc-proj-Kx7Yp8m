@@ -73,24 +73,11 @@ const fs = require('fs');
     const h2hSections = await matchPage.$$('div.h2h__section.section');
     console.log(`Total H2H sections found: ${h2hSections.length}`);
 
-    let matchData = '';
+    let matches = {}; // Store matches grouped by team
 
     // Process only the first 3 sections
     for (let i = 0; i < Math.min(3, h2hSections.length); i++) {
         console.log(`Checking H2H section ${i + 1}...`);
-        
-        // Find all span elements that match the required pattern
-        const spanElements = await h2hSections[i].$$('span.wcl-overline_rOFfd.wcl-scores-overline-02_n9EXm[data-testid="wcl-scores-overline-02"]');
-
-        if (spanElements.length > 0) {
-            for (const span of spanElements) {
-                const text = await span.textContent();
-                console.log(`Found section: ${text}`);
-                matchData += `${text}\n`;  // Save only the text
-            }
-        } else {
-            console.log(`No matching spans found.`);
-        }
 
         // Look for <div class="h2h__row "> inside this section
         const h2hRows = await h2hSections[i].$$('div.h2h__row[title="Click for match detail!"]');
@@ -103,14 +90,29 @@ const fs = require('fs');
             const teamSpans = await h2hRow.$$(`span[class*="h2h__participantInner"]`);
 
             if (teamSpans.length === 2) {
-                const team1 = await teamSpans[0].textContent();
-                const team2 = await teamSpans[1].textContent();
+                const team1 = (await teamSpans[0].textContent()).trim();
+                const team2 = (await teamSpans[1].textContent()).trim();
 
                 const matchLine = `${team1} vs ${team2} =`;
+
+                // Store matches under each team
+                if (!matches[team1]) matches[team1] = [];
+                if (!matches[team2]) matches[team2] = [];
+
+                matches[team1].push(matchLine);
+                matches[team2].push(matchLine);
+
                 console.log(`  - Found match: ${matchLine}`);
-                matchData += `${matchLine}\n`;
             }
         }
+    }
+
+    // Format output for matches.txt
+    let matchData = '';
+
+    for (const team in matches) {
+        matchData += `\n\n....Last matches: ${team}....\n`;
+        matchData += matches[team].join('\n') + '\n';
     }
 
     // Save extracted match details to matches.txt
