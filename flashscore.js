@@ -84,17 +84,16 @@ const fs = require('fs');
         if (spanElements.length > 0) {
             for (const span of spanElements) {
                 const text = await span.textContent();
-                console.log(`H2H Section ${i + 1} - Found text: ${text}`);
-                matchData += `H2H Section ${i + 1} - ${text}\n`;
+                console.log(`Found text: ${text}`);
+                matchData += `${text}\n`;  // Save only the text
             }
         } else {
-            console.log(`H2H Section ${i + 1} - No matching spans found.`);
-            matchData += `H2H Section ${i + 1} - No matching spans found.\n`;
+            console.log(`No matching spans found.`);
         }
     }
 
     // Save data to matches.txt
-    fs.writeFileSync('matches.txt', matchData);
+    fs.writeFileSync('matches.txt', matchData.trim());  // Trim to remove extra newlines
     console.log("Match data saved to matches.txt");
 
     await browser.close();
