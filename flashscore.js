@@ -16,15 +16,15 @@ const fs = require('fs');
         await page.click('button:has-text("Accept")');
         console.log("Accepted cookies");
     } catch (error) {
-        console.log("No cookie dialog found");
+        console.log("No cookie dialog found.");
     }
 
-    // Wait for the page to fully load
+    // Wait for page to load
     await page.waitForTimeout(5000);
 
-    // Find all match elements
+    // Find all match divs
     const matchDivs = await page.$$(`div.event__match.event__match--withRowLink.event__match--twoLine`);
-    console.log(`Total matches found: ${matchDivs.length}`);
+    console.log(`Total unique match divs found: ${matchDivs.length}`);
 
     if (matchDivs.length === 0) {
         console.log("No matches found. Exiting.");
@@ -32,60 +32,55 @@ const fs = require('fs');
         return;
     }
 
-    let uniqueMatches = new Set();
-    let upcomingMatches = [];
+    let validMatches = [];
 
-    for (const div of matchDivs) {
-        const id = await div.getAttribute('id');
+    for (const matchDiv of matchDivs) {
+        // Get the match ID
+        const matchId = await matchDiv.getAttribute('id');
 
-        if (id && !uniqueMatches.has(id)) {
-            uniqueMatches.add(id);
+        // Check if it's an upcoming match
+        const homeScoreDiv = await matchDiv.$(`div.event__score.event__score--home`);
+        const awayScoreDiv = await matchDiv.$(`div.event__score.event__score--away`);
 
-            // Check if the match is ongoing or finished
-            const scoreDiv = await div.$(`div.event__score.event__score--home`);
-            const scoreText = scoreDiv ? (await scoreDiv.textContent()).trim() : '-';
-
-            if (scoreText !== '-') {
-                console.log(`Skipping match ${id}, it is already played or live.`);
-                continue; // Skip ongoing or finished matches
-            }
-
-            // Extract team names
-            const teamSpans = await div.$$(`span.wcl-simpleText_Asp-0.wcl-scores-simpleText-01_pV2Wk.wcl-name_3y6f5`);
-
-            if (teamSpans.length === 2) {
-                const team1 = (await teamSpans[0].textContent()).trim();
-                const team2 = (await teamSpans[1].textContent()).trim();
-
-                const matchString = `${team1} vs ${team2}`;
-                upcomingMatches.push(matchString);
-                console.log(`Upcoming match found: ${matchString}`);
-            }
+        if (!homeScoreDiv || !awayScoreDiv) {
+            console.log(`Skipping match ${matchId}: No score divs found.`);
+            continue;
         }
+
+        const homeScore = await homeScoreDiv.textContent();
+        const awayScore = await awayScoreDiv.textContent();
+
+        if (homeScore.trim() !== '-' || awayScore.trim() !== '-') {
+            console.log(`Skipping match ${matchId}: Already played or live.`);
+            continue;
+        }
+
+        // Get team names
+        const teamSpans = await matchDiv.$$(`span.wcl-simpleText_Asp-0.wcl-scores-simpleText-01_pV2Wk.wcl-name_3y6f5`);
+
+        if (teamSpans.length !== 2) {
+            console.log(`Skipping match ${matchId}: Team names not found.`);
+            continue;
+        }
+
+        const team1 = (await teamSpans[0].textContent()).trim();
+        const team2 = (await teamSpans[1].textContent()).trim();
+
+        console.log(`Upcoming match found: ${team1} VS ${team2}`);
+        validMatches.push(`${team1} VS ${team2}`);
+
+        // Click to open match page in a new tab
+        await matchDiv.click({ button: 'middle' });
+        await page.waitForTimeout(3000); // Allow new tab to open
     }
 
-    if (upcomingMatches.length === 0) {
-        console.log("No upcoming matches found. Exiting.");
+    if (validMatches.length === 0) {
+        console.log("No valid upcoming matches found.");
         await browser.close();
         return;
     }
 
-    // Click on the first upcoming match
-    const firstMatchText = upcomingMatches[0];
-    console.log(`Attempting to click match: "${firstMatchText}"`);
-
-    try {
-        await page.waitForSelector(`div.event__match.event__match--withRowLink.event__match--twoLine:has-text("${firstMatchText}")`, { timeout: 30000, state: 'visible' });
-        await page.click(`div.event__match.event__match--withRowLink.event__match--twoLine:has-text("${firstMatchText}")`, { timeout: 60000 });
-        console.log(`Clicked match: ${firstMatchText}`);
-    } catch (error) {
-        console.error(`Failed to click match: ${firstMatchText}`, error);
-        await browser.close();
-        return;
-    }
-
-    // Detect new tab
-    await page.waitForTimeout(3000);
+    // Detect new match tab
     const newPages = context.pages();
     const matchPage = newPages.length > 1 ? newPages[newPages.length - 1] : null;
 
@@ -112,13 +107,12 @@ const fs = require('fs');
     // Wait for H2H section to load
     await matchPage.waitForTimeout(3000);
 
+    let matchData = validMatches.join("\n\n") + "\n\n";
+
     // Count the number of h2h__section elements
     const h2hSections = await matchPage.$$('div.h2h__section.section');
     console.log(`Total H2H sections found: ${h2hSections.length}`);
 
-    let matchData = `${firstMatchText}\n`;
-
-    // Process only the first 3 sections
     for (let i = 0; i < Math.min(3, h2hSections.length); i++) {
         console.log(`Checking H2H section ${i + 1}...`);
 
@@ -138,13 +132,11 @@ const fs = require('fs');
         const h2hRows = await h2hSections[i].$$('div.h2h__row[title="Click for match detail!"]');
         console.log(`Total h2h__row divs found in section ${i + 1}: ${h2hRows.length}`);
 
-        for (let j = 0; j < h2hRows.length; j++) {
-            const h2hRow = h2hRows[j];
-
+        for (const h2hRow of h2hRows) {
             // Find team names
             const teamSpans = await h2hRow.$$(`span[class*="h2h__participantInner"]`);
             if (teamSpans.length !== 2) {
-                console.log(`Skipping match row ${j + 1}: Team names not found.`);
+                console.log("Skipping match row: Team names not found.");
                 continue;
             }
             const team1 = (await teamSpans[0].textContent()).trim();
@@ -153,14 +145,14 @@ const fs = require('fs');
             // Find match result inside <span class="h2h__result">
             const resultSpan = await h2hRow.$(`span.h2h__result`);
             if (!resultSpan) {
-                console.log(`Skipping match row ${j + 1}: No result span found.`);
+                console.log("Skipping match row: No result span found.");
                 continue;
             }
 
             // Get the two score spans inside <span class="h2h__result">
             const scoreSpans = await resultSpan.$$(`span`);
             if (scoreSpans.length !== 2) {
-                console.log(`Skipping match row ${j + 1}: Score format incorrect.`);
+                console.log("Skipping match row: Score format incorrect.");
                 continue;
             }
 
@@ -174,13 +166,8 @@ const fs = require('fs');
     }
 
     // Save extracted match details to matches.txt
-    fs.writeFileSync('matches.txt', matchData.trim());
+    fs.writeFileSync('matches.txt', matchData.trim()); 
     console.log("Match data saved to matches.txt");
 
     await browser.close();
 })();
-
-// Handle Unhandled Promise Rejections
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Promise Rejection:', reason);
-});
