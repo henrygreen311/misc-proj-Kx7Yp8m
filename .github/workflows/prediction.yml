@@ -16,19 +16,10 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Install Playwright browsers
-        run: npx playwright install
+      - name: Install Playwright
+        run: npm install playwright && npx playwright install firefox
 
       - name: Run automation script
-        run: node flashscore.js  # Runs the script directly with Node.js
+        run: node flashscore.js  # Replace 'script.js' with your actual script filename
         env:
           DISPLAY: ':99.0'  # Enable Xvfb to run headless
-
-      - name: Upload match screenshot
-        uses: actions/upload-artifact@v4
-        with:
-          name: match-data
-          path: matches.txt
