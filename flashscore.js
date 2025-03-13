@@ -1,9 +1,9 @@
-const { chromium } = require('playwright');
+const { firefox } = require('playwright'); // Use Firefox instead of Chromium
 const fs = require('fs');
 
 (async () => {
-    console.log("Launching browser...");
-    const browser = await chromium.launch({ headless: true });
+    console.log("Launching Firefox browser...");
+    const browser = await firefox.launch({ headless: true });
     const context = await browser.newContext();
     const page = await context.newPage();
 
