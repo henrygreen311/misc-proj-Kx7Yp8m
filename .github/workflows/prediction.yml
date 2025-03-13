@@ -1,9 +1,6 @@
 name: Run Predict-bot Script
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
@@ -17,7 +14,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '14'
 
       - name: Install dependencies
         run: npm install
@@ -26,7 +23,7 @@ jobs:
         run: npx playwright install
 
       - name: Run automation script
-        run: node flashscore.js  # Changed from npm run flashscore to node flashscore.js
+        run: node flashscore.js  # Runs the script directly with Node.js
         env:
           DISPLAY: ':99.0'  # Enable Xvfb to run headless
 
