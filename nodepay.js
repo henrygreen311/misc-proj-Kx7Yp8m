@@ -1,7 +1,7 @@
 const { chromium } = require('playwright');
 
 (async () => {
-    const userDataDir = "/home/runner/Nodepay/nodepay_1"; // Use the new profile
+    const userDataDir = "/home/kali/Nodepay/nodepay_1"; // Use the new profile
 
     const browser = await chromium.launchPersistentContext(userDataDir, {
         headless: true,
@@ -18,6 +18,16 @@ const { chromium } = require('playwright');
     // Verify URL after waiting
     if (page.url() === "https://app.nodepay.ai/dashboard") {
         console.log("Login successful: URL verified.");
+        
+        // Check if the specific span element is visible
+        const extensionStatus = await page.locator('span.text-grey-100.lg\\:mt-4.mt-3.mb-3.text-center').isVisible();
+
+        if (extensionStatus) {
+            console.log("The extension is not running.");
+        } else {
+            console.log("Extension running successfully.");
+        }
+
     } else {
         console.log("Login failed: Unexpected URL - " + page.url());
     }
