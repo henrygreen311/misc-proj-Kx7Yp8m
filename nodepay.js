@@ -4,7 +4,7 @@ const { chromium } = require('playwright');
     const userDataDir = "/home/runner/Nodepay/nodepay_1"; // Use the new profile
 
     const browser = await chromium.launchPersistentContext(userDataDir, {
-        headless: 'new', // Use the new headless mode
+        headless: true, // Use the new headless mode
         args: ["--disable-blink-features=AutomationControlled", "--no-sandbox"]
     });
 
