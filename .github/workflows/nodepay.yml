@@ -1,7 +1,7 @@
 name: Run NodePay Script
 
 on:
-  workflow_dispatch: # Manual trigger
+  workflow_dispatch: # Allows manual trigger
   schedule:
     - cron: '0 */4 * * *' # Runs every 4 hours
 
@@ -21,7 +21,7 @@ jobs:
       - name: Install Playwright
         run: npm install playwright && npx playwright install chromium
 
-      - name: Install Xvfb (GUI Emulator)
+      - name: Install Xvfb (Simulate GUI for headless false)
         run: sudo apt update && sudo apt install -y xvfb
 
       - name: Clear old NodePay profile
@@ -40,10 +40,11 @@ jobs:
           mkdir -p /home/runner/Nodepay/extension
           tar -xzvf extension.tar.gz -C /home/runner/Nodepay/extension
 
-      - name: Start Xvfb (Simulate GUI)
-        run: Xvfb :99 -screen 0 1920x1080x24 &
+      - name: Start Xvfb (Enable GUI for Playwright)
+        run: Xvfb :99 -screen 0 1920x1080x24 & sleep 3
 
       - name: Run NodePay script
         run: node nodepay.js
         env:
-          DISPLAY: ':99.0'  # Use Xvfb display for GUI support
+          DISPLAY: ':99.0'  # Use virtual display
+          PLAYWRIGHT_BROWSERS_PATH: 0  # Ensure Playwright installs a fresh browser
