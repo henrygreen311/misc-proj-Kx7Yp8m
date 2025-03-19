@@ -39,6 +39,18 @@ jobs:
         run: |
           mkdir -p /home/runner/Nodepay/extension
           tar -xzvf extension.tar.gz -C /home/runner/Nodepay/extension
+          echo "Listing extracted files in /home/runner/Nodepay/extension:"
+          ls -R /home/runner/Nodepay/extension
+
+      - name: Detect Correct Extension Path
+        run: |
+          EXT_PATH=$(find /home/runner/Nodepay/extension -maxdepth 1 -type d | grep -E '[0-9]+\.[0-9]+_[0-9]+$' || echo "")
+          if [[ -z "$EXT_PATH" ]]; then
+            echo "Error: No valid extension folder found!" >&2
+            exit 1
+          fi
+          echo "Detected Extension Path: $EXT_PATH"
+          echo "EXTENSION_PATH=$EXT_PATH" >> $GITHUB_ENV
 
       - name: Start Xvfb (Enable GUI for Playwright)
         run: Xvfb :99 -screen 0 1920x1080x24 & sleep 3
@@ -48,3 +60,4 @@ jobs:
         env:
           DISPLAY: ':99.0'  # Use virtual display
           PLAYWRIGHT_BROWSERS_PATH: 0  # Ensure Playwright installs a fresh browser
+          EXTENSION_PATH: ${{ env.EXTENSION_PATH }}  # Pass detected extension path to the script
