@@ -1,16 +1,26 @@
 const { chromium } = require('playwright');
+const fs = require('fs');
 
 (async () => {
     const userDataDir = "/home/runner/Nodepay/nodepay_1"; // Use the persistent profile
     const extensionPath = "/home/runner/Nodepay/extension/2.2.8_0"; // Correct extension path
+
+    if (!fs.existsSync(extensionPath)) {
+        console.error(`Error: Extension path does not exist - ${extensionPath}`);
+        process.exit(1);
+    }
 
     const browser = await chromium.launchPersistentContext(userDataDir, {
         headless: false, // Extensions do NOT work in headless mode
         args: [
             "--disable-blink-features=AutomationControlled",
             "--no-sandbox",
-            `--disable-extensions-except=${extensionPath}`,  // Load only the NodePay extension
-            `--load-extension=${extensionPath}`  // Load the extension
+            "--disable-gpu",  // Fix GPU issues
+            "--disable-software-rasterizer", // Use CPU rendering
+            "--disable-dev-shm-usage",  // Prevent shared memory issues
+            "--start-maximized",
+            `--disable-extensions-except=${extensionPath}`,  
+            `--load-extension=${extensionPath}`  
         ]
     });
 
@@ -23,14 +33,16 @@ const { chromium } = require('playwright');
     if (page.url() === "https://app.nodepay.ai/dashboard") {
         console.log("Login successful: URL verified.");
 
-        // Check if the extension is running
-        const extensionStatus = await page.locator('span.text-grey-100.lg\\:mt-4.mt-3.mb-3.text-center').isVisible();
-
-        if (extensionStatus) {
-            console.log("The extension is not running.");
+        // Improved extension detection
+        const extensionFiles = fs.readdirSync(extensionPath);
+        if (extensionFiles.length === 0) {
+            console.log("Extension folder is empty. The extension might not be installed correctly.");
         } else {
-            console.log("Extension running successfully.");
+            console.log(`Extension files detected: ${extensionFiles.length}`);
         }
+
+        const extensionStatus = await page.locator('span.text-grey-100.lg\\:mt-4.mt-3.mb-3.text-center').isVisible();
+        console.log(extensionStatus ? "The extension is NOT running." : "Extension running successfully.");
 
         // Set a timeout to stop the script after 5 hours 30 minutes (19,800,000 ms)
         const runtimeLimit = 5 * 60 * 60 * 1000 + 30 * 60 * 1000; // 5h 30m in ms
