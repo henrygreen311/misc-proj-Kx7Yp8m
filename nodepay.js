@@ -5,7 +5,7 @@ const { chromium } = require('playwright');
     const extensionPath = "/home/runner/Nodepay/extension/2.2.8_0"; // Correct extension path
 
     const browser = await chromium.launchPersistentContext(userDataDir, {
-        headless: true, // Extensions do NOT work in headless mode
+        headless: false, // Extensions do NOT work in headless mode
         args: [
             "--disable-blink-features=AutomationControlled",
             "--no-sandbox",
