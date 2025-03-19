@@ -2,7 +2,7 @@ const { chromium } = require('playwright');
 
 (async () => {
     const userDataDir = "/home/runner/Nodepay/nodepay_1";
-    const extensionPath = "/home/runner/Nodepay/extension/";
+    const extensionPath = "/home/runner/Nodepay/extension/2.2.8_0";
 
     const browser = await chromium.launchPersistentContext(userDataDir, {
         headless: true, // Set to "new" for headless with extensions in newer Playwright
