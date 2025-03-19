@@ -3,7 +3,7 @@ name: Run NodePay Script
 on:
   workflow_dispatch: # Manual trigger
   schedule:
-    - cron: '0 */4 * * *' # Runs every 4 hours (e.g., 00:00, 04:00, 08:00 UTC)
+    - cron: '0 */4 * * *' # Runs every 4 hours
 
 jobs:
   automate:
@@ -20,6 +20,12 @@ jobs:
 
       - name: Install Playwright
         run: npm install playwright && npx playwright install chromium
+
+      - name: Clear old NodePay profile
+        run: rm -rf /home/runner/Nodepay/nodepay_1
+
+      - name: Clear old extension files
+        run: rm -rf /home/runner/Nodepay/extension
 
       - name: Extract Chromium Profile
         run: |
