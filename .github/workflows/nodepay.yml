@@ -18,8 +18,10 @@ jobs:
         with:
           node-version: '20.18.3'
 
-      - name: Install Playwright
-        run: npm install playwright && npx playwright install chromium
+      - name: Install Playwright and Chromium
+        run: |
+          npm install playwright
+          npx playwright install --with-deps chromium
 
       - name: Install Xvfb (Simulate GUI for headless false)
         run: sudo apt update && sudo apt install -y xvfb
@@ -48,3 +50,4 @@ jobs:
         env:
           DISPLAY: ':99.0'  # Use virtual display
           PLAYWRIGHT_BROWSERS_PATH: 0  # Ensure Playwright installs a fresh browser
+          PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS: 1  # Bypass Playwright system checks
