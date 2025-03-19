@@ -1,7 +1,7 @@
 const { chromium } = require('playwright');
 
 (async () => {
-    const userDataDir = "/home/kali/Nodepay/nodepay_1"; // Use the new profile
+    const userDataDir = "/home/runner/Nodepay/nodepay_1"; // Use the new profile
 
     const browser = await chromium.launchPersistentContext(userDataDir, {
         headless: true,
