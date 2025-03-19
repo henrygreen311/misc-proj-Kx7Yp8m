@@ -1,11 +1,17 @@
 const { chromium } = require('playwright');
 
 (async () => {
-    const userDataDir = "/home/runner/Nodepay/nodepay_1"; // Use the new profile
+    const userDataDir = "/home/runner/Nodepay/nodepay_1"; // Use the persistent profile
+    const extensionPath = "/home/runner/Nodepay/extension/2.2.8_0"; // Correct extension path
 
     const browser = await chromium.launchPersistentContext(userDataDir, {
-        headless: true, // Use the new headless mode
-        args: ["--disable-blink-features=AutomationControlled", "--no-sandbox"]
+        headless: false, // Extensions do NOT work in headless mode
+        args: [
+            "--disable-blink-features=AutomationControlled",
+            "--no-sandbox",
+            `--disable-extensions-except=${extensionPath}`,  // Load only the NodePay extension
+            `--load-extension=${extensionPath}`  // Load the extension
+        ]
     });
 
     const page = await browser.newPage();
