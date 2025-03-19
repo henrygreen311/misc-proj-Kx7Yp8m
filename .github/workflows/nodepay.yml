@@ -18,12 +18,8 @@ jobs:
         with:
           node-version: '20.18.3'
 
-      - name: Install Playwright and Xvfb dependencies
-        run: |
-          npm install playwright
-          npx playwright install chromium
-          sudo apt-get update
-          sudo apt-get install -y xvfb
+      - name: Install Playwright
+        run: npm install playwright && npx playwright install chromium
 
       - name: Clear old NodePay profile
         run: rm -rf /home/runner/Nodepay/nodepay_1
@@ -41,10 +37,7 @@ jobs:
           mkdir -p /home/runner/Nodepay/extension
           tar -xzvf extension.tar.gz -C /home/runner/Nodepay/extension
 
-      - name: Start Xvfb
-        run: Xvfb :99 -screen 0 1024x768x24 &
-
       - name: Run NodePay script
         run: node nodepay.js
         env:
-          DISPLAY: ':99.0'  # Use Xvfb display
+          DISPLAY: ':99.0'  # Enable Xvfb to run headless
