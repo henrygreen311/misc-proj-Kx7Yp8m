@@ -28,6 +28,14 @@ const { chromium } = require('playwright');
             console.log("Extension running successfully.");
         }
 
+        // Refresh every 15 minutes (900,000 milliseconds)
+        console.log("Starting refresh loop every 15 minutes...");
+        while (true) {
+            await page.reload({ waitUntil: "load" });
+            console.log("Page refreshed at: " + new Date().toISOString());
+            await page.waitForTimeout(900000); // 15 minutes = 900,000 ms
+        }
+
     } else {
         console.log("Login failed: Unexpected URL - " + page.url());
     }
