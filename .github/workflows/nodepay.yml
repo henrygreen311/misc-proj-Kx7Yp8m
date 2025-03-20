@@ -21,6 +21,9 @@ jobs:
       - name: Install Playwright
         run: npm install playwright && npx playwright install chromium
 
+      - name: Install Playwright Stealth
+        run: npm install @playwright/stealth
+
       - name: Install Xvfb (GUI Emulator)
         run: sudo apt update && sudo apt install -y xvfb
 
