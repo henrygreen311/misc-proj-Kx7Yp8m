@@ -4,19 +4,15 @@ const fs = require('fs');
 (async () => {
     const userDataDir = "/home/runner/Nodepay/nodepay_1"; // Use the persistent profile
     const extensionPath = "/home/runner/Nodepay/extension"; // Correct extension path
-    const proxyServer = process.env.TOR_PROXY || "socks5://127.0.0.1:9050"; // Use Tor proxy
 
     if (!fs.existsSync(extensionPath)) {
         console.error(`Error: Extension path does not exist - ${extensionPath}`);
         process.exit(1);
     }
 
-    console.log(`Using Proxy: ${proxyServer}`);
-
     const browser = await chromium.launchPersistentContext(userDataDir, {
         headless: false, // Extensions do NOT work in headless mode
         args: [
-            `--proxy-server=${proxyServer}`,  // Apply proxy to Chromium
             "--disable-blink-features=AutomationControlled",
             "--no-sandbox",
             "--disable-gpu",  // Fix GPU issues
@@ -29,11 +25,6 @@ const fs = require('fs');
     });
 
     const page = await browser.newPage();
-    
-    // Verify if Proxy is Working (Check IP)
-    await page.goto("https://check.torproject.org");
-    console.log("Tor Check:", await page.textContent("body"));
-
     await page.goto("https://app.nodepay.ai/dashboard", { waitUntil: "load" });
 
     console.log("Browser started with nodepay_1 profile. Waiting 10 seconds for login verification...");
