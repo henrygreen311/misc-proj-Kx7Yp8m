@@ -1,5 +1,5 @@
 const { chromium } = require('playwright-extra');
-const stealth = require('playwright-extra-plugin-stealth')();
+const stealth = require('@extra/stealth')();
 chromium.use(stealth);
 
 (async () => {
