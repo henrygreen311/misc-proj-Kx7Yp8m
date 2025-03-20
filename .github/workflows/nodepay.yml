@@ -29,13 +29,20 @@ jobs:
       - name: Install & Configure Tor with Multiple Exit Nodes
         run: |
           sudo apt install -y tor
-          echo "ExitNodes 51.15.98.64, 192.99.42.100, 185.220.101.3" | sudo tee -a /etc/tor/torrc  # Force Tor to use specific exit nodes
-          echo "StrictNodes 1" | sudo tee -a /etc/tor/torrc         # Only use the listed exit nodes
+          echo "ExitNodes 51.15.98.64, 192.99.42.100, 185.220.101.3" | sudo tee /etc/tor/torrc  # Force Tor to use specific exit nodes
+          echo "StrictNodes 1" | sudo tee -a /etc/tor/torrc        # Only use the listed exit nodes
           echo "MaxCircuitDirtiness 86400" | sudo tee -a /etc/tor/torrc  # Keep the same IP for 24 hours
-          sudo systemctl restart tor  # Restart Tor to apply changes
           
-          # Verify Tor is running
-          sudo systemctl status tor
+          # Ensure Tor runs as a service
+          sudo systemctl daemon-reload
+          sudo systemctl enable tor
+          sudo systemctl restart tor
+          
+          # Check if Tor is running properly
+          sudo systemctl status tor || (echo "Tor failed to start!" && exit 1)
+          
+          # Verify Tor's IP
+          curl --proxy socks5h://127.0.0.1:9050 ifconfig.me || (echo "Tor is not routing traffic!" && exit 1)
 
       - name: Clear old NodePay profile
         run: rm -rf /home/runner/Nodepay/nodepay_1
