@@ -10,9 +10,13 @@ const fs = require('fs');
         process.exit(1);
     }
 
+    // Set Chrome User-Agent
+    const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+
     const browser = await chromium.launchPersistentContext(userDataDir, {
         headless: false, // Extensions do NOT work in headless mode
         args: [
+            `--user-agent=${userAgent}`, // Set User-Agent here
             "--disable-blink-features=AutomationControlled",
             "--no-sandbox",
             "--disable-gpu",  // Fix GPU issues
@@ -30,10 +34,6 @@ const fs = require('fs');
     });
 
     const page = await browser.newPage();
-
-    // Set Chrome User-Agent
-    const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
-    await page.setUserAgent(userAgent);
 
     // Anti-Bot Detection: Modify WebRTC, WebGL, and Navigator Properties
     await page.addInitScript(() => {
