@@ -1,6 +1,5 @@
-const { chromium } = require('playwright-extra');
-const stealth = require('@extra/stealth')();
-chromium.use(stealth);
+const { chromium } = require('playwright');
+const fs = require('fs');
 
 (async () => {
     const userDataDir = "/home/runner/Nodepay/nodepay_1"; // Use the persistent profile
@@ -20,18 +19,31 @@ chromium.use(stealth);
             "--disable-software-rasterizer", // Use CPU rendering
             "--disable-dev-shm-usage",  // Prevent shared memory issues
             "--start-maximized",
+            "--disable-features=IsolateOrigins,site-per-process",
+            "--disable-site-isolation-trials",
+            "--disable-web-security",
             `--disable-extensions-except=${extensionPath}`,  
             `--load-extension=${extensionPath}`  
         ]
     });
 
     const page = await browser.newPage();
-    
-    // Apply Stealth Mode
-    await stealth()(page);
 
-    // Set Chrome User-Agent
+    // Set a Chrome user agent
     await page.setUserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36");
+
+    // Disable Playwright detection
+    await page.evaluateOnNewDocument(() => {
+        Object.defineProperty(navigator, 'webdriver', {
+            get: () => false
+        });
+        Object.defineProperty(navigator, 'plugins', {
+            get: () => [1, 2, 3, 4, 5] // Fake plugins
+        });
+        Object.defineProperty(navigator, 'languages', {
+            get: () => ["en-US", "en"]
+        });
+    });
 
     await page.goto("https://app.nodepay.ai/dashboard", { waitUntil: "load" });
 
