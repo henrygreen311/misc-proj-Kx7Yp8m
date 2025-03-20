@@ -33,16 +33,19 @@ const fs = require('fs');
     if (page.url() === "https://app.nodepay.ai/dashboard") {
         console.log("Login successful: URL verified.");
 
-        // Improved extension detection
-        const extensionFiles = fs.readdirSync(extensionPath);
-        if (extensionFiles.length === 0) {
-            console.log("Extension folder is empty. The extension might not be installed correctly.");
-        } else {
-            console.log(`Extension files detected: ${extensionFiles.length}`);
-        }
+        // Wait 30 seconds before checking for the div
+        console.log("Waiting 30 seconds before checking for the claim button...");
+        await page.waitForTimeout(30000);
 
-        const extensionStatus = await page.locator('span.text-grey-100.lg\\:mt-4.mt-3.mb-3.text-center').isVisible();
-        console.log(extensionStatus ? "The extension is NOT running." : "Extension running successfully.");
+        // Locate the div element
+        const claimButton = page.locator('div[id="1"][style*="box-shadow: rgba(0, 0, 0, 0.2) 0px -8px 0px 0px inset;"]');
+
+        if (await claimButton.isVisible()) {
+            console.log("Claim button found. Clicking now...");
+            await claimButton.click();
+        } else {
+            console.log("Claim button not found.");
+        }
 
         // Set a timeout to stop the script after 5 hours 30 minutes (19,800,000 ms)
         const runtimeLimit = 5 * 60 * 60 * 1000 + 30 * 60 * 1000; // 5h 30m in ms
