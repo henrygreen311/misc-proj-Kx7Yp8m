@@ -35,15 +35,6 @@ const fs = require('fs');
 
     const page = await browser.newPage();
 
-    // Anti-Bot Detection: Modify WebRTC, WebGL, and Navigator Properties
-    await page.addInitScript(() => {
-        Object.defineProperty(navigator, 'webdriver', { get: () => false });
-        Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
-        Object.defineProperty(navigator, 'platform', { get: () => 'Win32' });
-        Object.defineProperty(navigator, 'deviceMemory', { get: () => 8 });
-        Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 });
-    });
-
     // Go to NodePay dashboard
     await page.goto("https://app.nodepay.ai/dashboard", { waitUntil: "load" });
 
