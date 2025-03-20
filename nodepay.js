@@ -30,7 +30,7 @@ const fs = require('fs');
     const page = await browser.newPage();
 
     // Set a Chrome user agent
-    await page.setUserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36");
+    await browser.setUserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36");
 
     // Disable Playwright detection
     await page.evaluateOnNewDocument(() => {
