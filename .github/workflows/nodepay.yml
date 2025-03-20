@@ -1,7 +1,7 @@
 name: Run NodePay Script
 
 on:
-  workflow_dispatch: # Allows manual trigger
+  workflow_dispatch: # Manual trigger
   schedule:
     - cron: '0 */4 * * *' # Runs every 4 hours
 
@@ -18,42 +18,11 @@ jobs:
         with:
           node-version: '20.18.3'
 
-      - name: Install Playwright and Chromium
-        run: |
-          npm install playwright
-          npx playwright install --with-deps chromium
+      - name: Install Playwright
+        run: npm install playwright && npx playwright install chromium
 
       - name: Install Xvfb (GUI Emulator)
         run: sudo apt update && sudo apt install -y xvfb
-
-      - name: Install & Configure Tor with Multiple Exit Nodes
-        run: |
-          sudo apt update && sudo apt install -y tor
-          
-          # Configure Tor to use specific exit nodes
-          echo "ExitNodes 51.15.98.64, 192.99.42.100, 185.220.101.3" | sudo tee /etc/tor/torrc
-          echo "StrictNodes 1" | sudo tee -a /etc/tor/torrc
-          echo "MaxCircuitDirtiness 86400" | sudo tee -a /etc/tor/torrc
-          
-          # Ensure Tor directories exist
-          sudo mkdir -p /var/lib/tor
-          sudo chmod 700 /var/lib/tor
-          sudo chown debian-tor:debian-tor /var/lib/tor
-
-          # Restart Tor and wait for it to be ready
-          sudo systemctl daemon-reload
-          sudo systemctl enable tor
-          sudo systemctl restart tor
-          sleep 5
-          
-          # If Tor fails to start, try running it manually
-          if ! systemctl is-active --quiet tor; then
-            echo "Tor failed to start! Trying manual start..."
-            tor & sleep 10
-          fi
-          
-          # Verify Tor IP
-          curl --proxy socks5h://127.0.0.1:9050 ifconfig.me || (echo "Tor is not routing traffic!" && exit 1)
 
       - name: Clear old NodePay profile
         run: rm -rf /home/runner/Nodepay/nodepay_1
@@ -71,12 +40,10 @@ jobs:
           mkdir -p /home/runner/Nodepay/extension
           tar -xzvf extension-profile.tar.gz -C /home/runner/Nodepay/extension
 
-      - name: Start Xvfb (Enable GUI for Playwright)
-        run: Xvfb :99 -screen 0 1920x1080x24 & sleep 3
+      - name: Start Xvfb (Simulate GUI)
+        run: Xvfb :99 -screen 0 1920x1080x24 &
 
-      - name: Run NodePay script with Tor
+      - name: Run NodePay script
         run: node nodepay.js
         env:
-          DISPLAY: ':99.0'  # Use virtual display
-          PLAYWRIGHT_BROWSERS_PATH: 0  # Force Playwright to use installed browser
-          TOR_PROXY: "socks5://127.0.0.1:9050"  # Set Tor Proxy Environment Variable
+          DISPLAY: ':99.0'  # Use Xvfb display for GUI support
