@@ -1,6 +1,6 @@
-const { chromium } = require('playwright');
-const { stealth } = require('@playwright/stealth');
-const fs = require('fs');
+const { chromium } = require('playwright-extra');
+const stealth = require('playwright-extra-plugin-stealth')();
+chromium.use(stealth);
 
 (async () => {
     const userDataDir = "/home/runner/Nodepay/nodepay_1"; // Use the persistent profile
