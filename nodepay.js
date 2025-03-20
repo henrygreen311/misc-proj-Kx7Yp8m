@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { stealth } = require('@playwright/stealth');
 const fs = require('fs');
 
 (async () => {
@@ -25,6 +26,13 @@ const fs = require('fs');
     });
 
     const page = await browser.newPage();
+    
+    // Apply Stealth Mode
+    await stealth()(page);
+
+    // Set Chrome User-Agent
+    await page.setUserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36");
+
     await page.goto("https://app.nodepay.ai/dashboard", { waitUntil: "load" });
 
     console.log("Browser started with nodepay_1 profile. Waiting 10 seconds for login verification...");
