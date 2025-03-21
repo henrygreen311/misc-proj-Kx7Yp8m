@@ -44,18 +44,18 @@ const fs = require('fs');
         const extensionStatus = await page.locator('span.text-grey-100.lg\\:mt-4.mt-3.mb-3.text-center').isVisible();
         console.log(extensionStatus ? "The extension is NOT running." : "Extension running successfully.");
 
-        // Look for the "Claim 100" button and click if found
+        // Look for the new button and click if found
         try {
-            const claimButton = await page.locator('div:has-text("Claim 100")').first();
+            const claimButton = await page.locator('div.flex.justify-center.h-full.w-full.items-center.text-white.font-bold.pb-\î7px\î.tracking-wide').first();
             if (await claimButton.isVisible()) {
-                console.log("Claim 100 button found. Clicking...");
+                console.log("New claim button found. Clicking...");
                 await claimButton.click();
-                console.log("Claim 100 button clicked successfully.");
+                console.log("New claim button clicked successfully.");
             } else {
-                console.log("Claim 100 button not found.");
+                console.log("New claim button not found.");
             }
         } catch (error) {
-            console.error("Error finding or clicking Claim 100 button:", error);
+            console.error("Error finding or clicking the new claim button:", error);
         }
 
         // Set a timeout to stop the script after 5 hours 30 minutes (19,800,000 ms)
@@ -82,4 +82,4 @@ const fs = require('fs');
         await browser.close();
     }
 
-})();
+}
