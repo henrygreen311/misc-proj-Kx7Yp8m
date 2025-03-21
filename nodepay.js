@@ -44,17 +44,16 @@ const fs = require('fs');
         const extensionStatus = await page.locator('span.text-grey-100.lg\\:mt-4.mt-3.mb-3.text-center').isVisible();
         console.log(extensionStatus ? "The extension is NOT running." : "Extension running successfully.");
 
-        // Look for the claim button inside the specified parent div
+        // Look for the claim button using XPath and click it
         try {
-            const parentDiv = await page.locator('div.lg\\:col-span-1.col-span-2').first();
-            const claimButton = await parentDiv.locator('div.flex.justify-center.h-full.w-full.items-center.text-white.font-bold.pb-\î7px\î.tracking-wide').first();
-
+            const claimButton = await page.locator('xpath=/html/body/div[1]/div[3]/div/main/div/div[2]/div[5]/div[1]/div/div[2]/div[1]/div[2]/div/div[2]');
+            
             if (await claimButton.isVisible()) {
-                console.log("Claim button found inside the specified parent div. Clicking...");
+                console.log("Claim button found using XPath. Clicking...");
                 await claimButton.click();
                 console.log("Claim button clicked successfully.");
             } else {
-                console.log("Claim button not found inside the specified parent div.");
+                console.log("Claim button not found using XPath.");
             }
         } catch (error) {
             console.error("Error finding or clicking the claim button:", error);
