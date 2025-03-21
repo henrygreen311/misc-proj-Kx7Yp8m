@@ -44,18 +44,20 @@ const fs = require('fs');
         const extensionStatus = await page.locator('span.text-grey-100.lg\\:mt-4.mt-3.mb-3.text-center').isVisible();
         console.log(extensionStatus ? "The extension is NOT running." : "Extension running successfully.");
 
-        // Look for the new button and click if found
+        // Look for the claim button inside the specified parent div
         try {
-            const claimButton = await page.locator('div.flex.justify-center.h-full.w-full.items-center.text-white.font-bold.pb-\î7px\î.tracking-wide').first();
+            const parentDiv = await page.locator('div.lg\\:col-span-1.col-span-2').first();
+            const claimButton = await parentDiv.locator('div.flex.justify-center.h-full.w-full.items-center.text-white.font-bold.pb-\î7px\î.tracking-wide').first();
+
             if (await claimButton.isVisible()) {
-                console.log("New claim button found. Clicking...");
+                console.log("Claim button found inside the specified parent div. Clicking...");
                 await claimButton.click();
-                console.log("New claim button clicked successfully.");
+                console.log("Claim button clicked successfully.");
             } else {
-                console.log("New claim button not found.");
+                console.log("Claim button not found inside the specified parent div.");
             }
         } catch (error) {
-            console.error("Error finding or clicking the new claim button:", error);
+            console.error("Error finding or clicking the claim button:", error);
         }
 
         // Set a timeout to stop the script after 5 hours 30 minutes (19,800,000 ms)
@@ -82,4 +84,4 @@ const fs = require('fs');
         await browser.close();
     }
 
-})();
+}
